@@ -39,21 +39,22 @@ function requireApiKey(req, res, next) {
 }
 
 // ─── LinkedIn OAuth ────────────────────────────────────────────────────────────
+const REDIRECT_URI = process.env.REDIRECT_URI || "https://postautobot.getmicroservices.co/auth/callback";
+
 app.get("/auth/linkedin", (req, res) => {
   const cfg = loadConfig();
   if (!cfg.linkedin_client_id) {
     return res.redirect("/?error=missing_credentials");
   }
   const state = crypto.randomBytes(16).toString("hex");
-  const redirectUri = `${req.protocol}://${req.get("host")}/auth/callback`;
-  const url = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${cfg.linkedin_client_id}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20profile%20w_member_social%20r_member_social&state=${state}`;
+  const url = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${cfg.linkedin_client_id}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=openid%20profile%20w_member_social%20r_member_social&state=${state}`;
   res.redirect(url);
 });
 
 app.get("/auth/callback", async (req, res) => {
   const cfg = loadConfig();
   const { code } = req.query;
-  const redirectUri = `${req.protocol}://${req.get("host")}/auth/callback`;
+  const redirectUri = REDIRECT_URI;
 
   try {
     // Exchange code for token
